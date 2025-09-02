@@ -4,7 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { View, ActivityIndicator } from 'react-native';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 
 import LoginScreen from './app/index';
 import HomeScreen from './app/home';
@@ -63,7 +63,7 @@ export default function App() {
   if (isLoading) {
     return (
       <SafeAreaProvider>
-        <View className="flex-1 justify-center items-center bg-blue-600">
+        <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="white" />
         </View>
         <StatusBar style="light" />
@@ -96,3 +96,12 @@ export default function App() {
     </SafeAreaProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#2563eb', // blue-600
+  },
+});

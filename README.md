@@ -11,7 +11,7 @@ A React Native app for student attendance tracking built with Expo and TypeScrip
 
 1. Install dependencies:
    ```bash
-   npm install --legacy-peer-deps
+   npm install
    ```
 
 ## Running the App

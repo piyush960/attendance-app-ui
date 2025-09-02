@@ -1,0 +1,53 @@
+{
+  "expo": {
+    "name": "SchoolTrack",
+    "slug": "schooltrack-attendance",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "description": "Automated Attendance System for Rural Schools",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3c72"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.schooltrack.attendance"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1e3c72"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.schooltrack.attendance",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow SchoolTrack to access your photos to capture class photos and student identification videos.",
+          "cameraPermission": "Allow SchoolTrack to access your camera to take photos and videos for attendance tracking."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "17122e75-0d3b-4013-8703-c8b67b47702e"
+      }
+    }
+  }
+}

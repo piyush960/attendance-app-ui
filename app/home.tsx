@@ -114,7 +114,7 @@ export default function HomeScreen({ user, onLogout }: HomeScreenProps) {
             {/* View Students Card */}
             <TouchableOpacity 
               style={styles.optionCard}
-              onPress={() => Alert.alert('Coming Soon', 'View Students feature will be available in the next version.')}
+              onPress={() => navigation.navigate('ViewStudents')}
             >
               <View style={styles.purpleIconContainer}>
                 <Users size={32} color="#8b5cf6" />
@@ -128,7 +128,7 @@ export default function HomeScreen({ user, onLogout }: HomeScreenProps) {
             {/* Attendance History Card */}
             <TouchableOpacity 
               style={styles.optionCard}
-              onPress={() => Alert.alert('Coming Soon', 'Attendance History feature will be available in the next version.')}
+              onPress={() => navigation.navigate('AttendanceHistory')}
             >
               <View style={styles.amberIconContainer}>
                 <BookOpen size={32} color="#f59e0b" />
@@ -159,10 +159,10 @@ export default function HomeScreen({ user, onLogout }: HomeScreenProps) {
             </View>
           </View>
 
-          {/* Offline Notice */}
+          {/* System Notice */}
           <View style={styles.offlineNotice}>
             <Text style={styles.offlineText}>
-              ✅ Works offline - Data syncs when connection is available
+              🚀 Powered by AI - Real-time face recognition with local data storage
             </Text>
           </View>
 

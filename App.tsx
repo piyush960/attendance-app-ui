@@ -10,6 +10,8 @@ import LoginScreen from './app/index';
 import HomeScreen from './app/home';
 import RegisterStudentScreen from './app/register-student';
 import TakeAttendanceScreen from './app/take-attendance';
+import ViewStudentsScreen from './app/view-students';
+import AttendanceHistoryScreen from './app/attendance-history';
 import { AuthService, User } from './services/auth';
 import { ApiService } from './services/api';
 
@@ -18,6 +20,8 @@ export type RootStackParamList = {
   Home: undefined;
   RegisterStudent: undefined;
   TakeAttendance: undefined;
+  ViewStudents: undefined;
+  AttendanceHistory: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -83,6 +87,8 @@ export default function App() {
               </Stack.Screen>
               <Stack.Screen name="RegisterStudent" component={RegisterStudentScreen} />
               <Stack.Screen name="TakeAttendance" component={TakeAttendanceScreen} />
+              <Stack.Screen name="ViewStudents" component={ViewStudentsScreen} />
+              <Stack.Screen name="AttendanceHistory" component={AttendanceHistoryScreen} />
             </>
           ) : (
             // Non-authenticated screens

@@ -44,8 +44,8 @@ export default function App() {
 
   const initializeApp = async () => {
     try {
-      // Initialize mock data for demo
-      await ApiService.initializeMockData();
+      // App initialization (no longer needed for API-based backend)
+      console.log('App initialized with API-based backend');
     } catch (error) {
       console.error('Error initializing app:', error);
     }

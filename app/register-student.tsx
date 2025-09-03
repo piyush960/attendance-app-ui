@@ -18,6 +18,7 @@ export default function RegisterStudentScreen() {
   const [videoUploaded, setVideoUploaded] = useState(false);
   const [videoUri, setVideoUri] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
+  const [processingStep, setProcessingStep] = useState<string>('');
 
   const handleVideoCapture = async () => {
     try {
@@ -45,7 +46,7 @@ export default function RegisterStudentScreen() {
   const openCamera = async () => {
     try {
       const result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        mediaTypes: 'videos',
         allowsEditing: true,
         quality: 0.8,
         videoMaxDuration: 30,
@@ -64,7 +65,7 @@ export default function RegisterStudentScreen() {
   const openGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Videos,
+        mediaTypes: 'videos',
         allowsEditing: true,
         quality: 0.8,
       });
@@ -90,23 +91,77 @@ export default function RegisterStudentScreen() {
       return;
     }
 
+    // Validate classroom format
+    const classroomPattern = /^[0-9]+[A-Z]$/;
+    if (!classroomPattern.test(classRoom)) {
+      Alert.alert(
+        'Invalid Classroom Format', 
+        'Please enter classroom in format like "5A", "10B", etc.'
+      );
+      return;
+    }
+
     setIsLoading(true);
+    setProcessingStep('Preparing video upload...');
 
     try {
+      // Show different processing steps
+      setTimeout(() => setProcessingStep('Uploading video to server...'), 500);
+      setTimeout(() => setProcessingStep('Extracting frames from video...'), 2000);
+      setTimeout(() => setProcessingStep('Detecting faces in frames...'), 4000);
+      setTimeout(() => setProcessingStep('Generating face embeddings...'), 6000);
+      setTimeout(() => setProcessingStep('Storing in vector database...'), 8000);
+      
       const result = await ApiService.registerStudent({
         name: studentName,
         rollNo: rollNo,
         classroom: classRoom,
         videoUri: videoUri,
+        // You can customize these parameters if needed
+        minRequiredImages: 5,
+        frameInterval: 30,
+        maxFrames: 100,
       });
 
-      if (result.success) {
+      if (result.success && result.response) {
+        const { response } = result;
+        
+        // Show detailed success information
+        let successMessage = `Student ${studentName} has been registered successfully!\n`;
+        successMessage += `🎉 Face embeddings stored in AI system - ready for attendance tracking!\n\n`;
+        
+        if (response.video_info) {
+          successMessage += `Video Processing Results:\n`;
+          successMessage += `• Duration: ${response.video_info.duration}s\n`;
+          successMessage += `• Frames extracted: ${response.video_info.frames_extracted}\n`;
+          successMessage += `• Faces detected: ${response.video_info.faces_detected}\n`;
+          successMessage += `• Unique embeddings: ${response.video_info.unique_embeddings}\n\n`;
+        }
+        
+        if (response.processing_summary) {
+          successMessage += `Processing Summary:\n`;
+          successMessage += `• Successful frames: ${response.processing_summary.successful_frames}\n`;
+          successMessage += `• Failed frames: ${response.processing_summary.failed_frames}\n`;
+          successMessage += `• Total processed: ${response.processing_summary.total_frames}`;
+        }
+
         Alert.alert(
-          'Registration Successful',
-          `Student ${studentName} has been registered successfully!`,
+          'Registration Successful ✅',
+          successMessage,
           [
             { 
-              text: 'OK', 
+              text: 'Register Another', 
+              onPress: () => {
+                setStudentName('');
+                setRollNo('');
+                setClassRoom('');
+                setVideoUploaded(false);
+                setVideoUri(undefined);
+              }
+            },
+            { 
+              text: 'Done', 
+              style: 'default',
               onPress: () => {
                 setStudentName('');
                 setRollNo('');
@@ -119,13 +174,33 @@ export default function RegisterStudentScreen() {
           ]
         );
       } else {
-        Alert.alert('Registration Failed', result.message || 'Failed to register student');
+        // Handle different types of errors
+        let errorTitle = 'Registration Failed';
+        let errorMessage = result.message || 'Failed to register student';
+        
+        if (errorMessage.includes('Video file too large')) {
+          errorTitle = 'Video File Too Large';
+          errorMessage += '\n\nPlease use a smaller video file (max 100MB).';
+        } else if (errorMessage.includes('Video processing failed')) {
+          errorTitle = 'Video Processing Error';
+          errorMessage += '\n\nEnsure the video shows the student\'s face clearly.';
+        } else if (errorMessage.includes('Network error')) {
+          errorTitle = 'Connection Error';
+          errorMessage += '\n\nPlease check your internet connection and try again.';
+        }
+        
+        Alert.alert(errorTitle, errorMessage);
       }
     } catch (error) {
       console.error('Error registering student:', error);
-      Alert.alert('Error', 'An error occurred during registration. Please try again.');
+      setProcessingStep('');
+      Alert.alert(
+        'Connection Error', 
+        'Unable to connect to the server. Please check your internet connection and try again.'
+      );
     } finally {
       setIsLoading(false);
+      setProcessingStep('');
     }
   };
 
@@ -219,13 +294,13 @@ export default function RegisterStudentScreen() {
                     </View>
                     <Text style={styles.uploadButtonText}>Upload Student Video</Text>
                     <Text style={styles.uploadButtonSubtext}>
-                      Capture or upload a short video of the student's face
+                      Record a clear video showing the student's face (AI will extract face data)
                     </Text>
                   </TouchableOpacity>
                 )}
                 
                 <Text style={styles.videoNote}>
-                  Video will be used for face recognition during attendance
+                  AI system will extract face embeddings from your video for accurate attendance tracking
                 </Text>
               </View>
             </View>
@@ -239,7 +314,14 @@ export default function RegisterStudentScreen() {
               {isLoading ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color="white" />
-                  <Text style={styles.loadingText}>Registering...</Text>
+                  <View style={styles.loadingTextContainer}>
+                    <Text style={styles.loadingText}>
+                      {processingStep || 'Processing video...'}
+                    </Text>
+                    <Text style={styles.loadingSubtext}>
+                      AI is analyzing the video
+                    </Text>
+                  </View>
                 </View>
               ) : (
                 <Text style={styles.submitButtonText}>Register Student</Text>
@@ -249,19 +331,20 @@ export default function RegisterStudentScreen() {
 
           {/* Instructions Card */}
           <View style={styles.instructionsCard}>
-            <Text style={styles.instructionsTitle}>Registration Tips</Text>
+            <Text style={styles.instructionsTitle}>Video Requirements & Tips</Text>
             <View style={styles.instructionsList}>
-              <Text style={styles.instructionItem}>• Ensure good lighting when recording the student video</Text>
-              <Text style={styles.instructionItem}>• Capture clear front-facing view of student's face</Text>
-              <Text style={styles.instructionItem}>• Video should be at least 5 seconds long</Text>
-              <Text style={styles.instructionItem}>• All fields marked with * are required</Text>
+              <Text style={styles.instructionItem}>• Video formats: MP4, AVI, MOV, MKV, WMV, FLV, WebM</Text>
+              <Text style={styles.instructionItem}>• Maximum file size: 100MB</Text>
+              <Text style={styles.instructionItem}>• Duration: 1 second to 5 minutes recommended</Text>
+              <Text style={styles.instructionItem}>• Ensure clear, well-lit video with student's face visible</Text>
+              <Text style={styles.instructionItem}>• Classroom format: 5A, 10B, etc.</Text>
             </View>
           </View>
 
-          {/* Offline Notice */}
-          <View style={styles.offlineNotice}>
-            <Text style={styles.offlineText}>
-              ✅ Works offline - Data will sync when connection is available
+          {/* Backend Notice */}
+          <View style={styles.backendNotice}>
+            <Text style={styles.backendNoticeText}>
+              🚀 Powered by AI - Advanced face recognition and video processing
             </Text>
           </View>
         </ScrollView>
@@ -438,11 +521,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  loadingTextContainer: {
+    marginLeft: 12,
+  },
   loadingText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 18,
-    marginLeft: 8,
+    fontSize: 16,
+  },
+  loadingSubtext: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 14,
+    marginTop: 2,
   },
   instructionsCard: {
     backgroundColor: '#eff6ff',
@@ -467,15 +557,15 @@ const styles = StyleSheet.create({
   instructionItem: {
     color: '#1d4ed8',
   },
-  offlineNotice: {
-    backgroundColor: '#f0fdf4',
+  backendNotice: {
+    backgroundColor: '#eff6ff',
     borderRadius: 8,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#86efac',
+    borderColor: '#93c5fd',
   },
-  offlineText: {
-    color: '#15803d',
+  backendNoticeText: {
+    color: '#1d4ed8',
     textAlign: 'center',
     fontWeight: '500',
   },

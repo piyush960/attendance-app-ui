@@ -12,7 +12,6 @@ type ViewStudentsNavigationProp = NativeStackNavigationProp<RootStackParamList, 
 export default function ViewStudentsScreen() {
   const navigation = useNavigation<ViewStudentsNavigationProp>();
   const [students, setStudents] = useState<Student[]>([]);
-  const [groupedStudents, setGroupedStudents] = useState<{[key: string]: Student[]}>({});
   const [isLoading, setIsLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -28,31 +27,19 @@ export default function ViewStudentsScreen() {
     }
 
     try {
-      const studentData = await ApiService.getStudents();
-      setStudents(studentData);
+      const studentData = await ApiService.getStudentsFromBackend();
       
-      // Group students by classroom
-      const grouped = studentData.reduce((acc, student) => {
-        if (!acc[student.classroom]) {
-          acc[student.classroom] = [];
-        }
-        acc[student.classroom].push(student);
-        return acc;
-      }, {} as {[key: string]: Student[]});
-      
-      // Sort students within each classroom by roll number
-      Object.keys(grouped).forEach(classroom => {
-        grouped[classroom].sort((a, b) => {
-          const rollA = parseInt(a.rollNo) || 0;
-          const rollB = parseInt(b.rollNo) || 0;
-          return rollA - rollB;
-        });
+      // Sort students by roll number
+      const sortedStudents = studentData.sort((a, b) => {
+        const rollA = parseInt(a.rollNo) || 0;
+        const rollB = parseInt(b.rollNo) || 0;
+        return rollA - rollB;
       });
       
-      setGroupedStudents(grouped);
+      setStudents(sortedStudents);
     } catch (error) {
       console.error('Error loading students:', error);
-      Alert.alert('Error', 'Failed to load students');
+      Alert.alert('Error', 'Failed to load students from backend. Please check your connection.');
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -76,7 +63,7 @@ export default function ViewStudentsScreen() {
     });
   };
 
-  const classroomNames = Object.keys(groupedStudents).sort();
+  // Remove classroom grouping since backend doesn't provide classroom info
 
   return (
     <View style={styles.container}>
@@ -106,64 +93,57 @@ export default function ViewStudentsScreen() {
             <View style={styles.summaryRow}>
               <View style={styles.summaryItem}>
                 <Text style={styles.summaryNumber}>{students.length}</Text>
-                <Text style={styles.summaryLabel}>Total Students</Text>
+                <Text style={styles.summaryLabel}>Total Enrolled</Text>
               </View>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryNumber}>{classroomNames.length}</Text>
-                <Text style={styles.summaryLabel}>Classes</Text>
+                <Text style={styles.summaryNumber}>{students.length > 0 ? '✓' : '✗'}</Text>
+                <Text style={styles.summaryLabel}>Backend Sync</Text>
               </View>
             </View>
           </View>
 
-          {/* Students by Classroom */}
+          {/* Students List */}
           {students.length === 0 ? (
             <View style={styles.emptyState}>
               <Users size={64} color="#9ca3af" />
-              <Text style={styles.emptyTitle}>No Students Registered</Text>
+              <Text style={styles.emptyTitle}>No Students Found</Text>
               <Text style={styles.emptyMessage}>
-                Start by registering students with their identification videos
+                {isLoading ? 'Loading students from backend...' : 'No students are currently enrolled in the system'}
               </Text>
               <TouchableOpacity 
                 style={styles.registerButton}
                 onPress={handleRegisterNew}
               >
                 <UserPlus color="white" size={20} />
-                <Text style={styles.registerButtonText}>Register First Student</Text>
+                <Text style={styles.registerButtonText}>Register New Student</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            classroomNames.map((classroom) => (
-              <View key={classroom} style={styles.classroomCard}>
-                <View style={styles.classroomHeader}>
-                  <Text style={styles.classroomTitle}>Class {classroom}</Text>
-                  <Text style={styles.classroomCount}>
-                    {groupedStudents[classroom].length} student{groupedStudents[classroom].length !== 1 ? 's' : ''}
-                  </Text>
-                </View>
-                
-                <View style={styles.studentsList}>
-                  {groupedStudents[classroom].map((student) => (
-                    <View key={student.id} style={styles.studentCard}>
-                      <View style={styles.studentInfo}>
-                        <View style={styles.studentHeader}>
-                          <Text style={styles.studentName}>{student.name}</Text>
-                          <Text style={styles.rollNumber}>#{student.rollNo}</Text>
-                        </View>
-                        <Text style={styles.registrationDate}>
-                          Registered: {formatDate(student.createdAt)}
-                        </Text>
-                        {student.videoUri && (
-                          <View style={styles.videoStatus}>
-                            <View style={styles.videoDot} />
-                            <Text style={styles.videoText}>Video Ready</Text>
-                          </View>
-                        )}
+            <View style={styles.studentsCard}>
+              <View style={styles.studentsHeader}>
+                <Text style={styles.studentsTitle}>Enrolled Students</Text>
+                <Text style={styles.studentsCount}>
+                  {students.length} student{students.length !== 1 ? 's' : ''}
+                </Text>
+              </View>
+              
+              <View style={styles.studentsList}>
+                {students.map((student) => (
+                  <View key={student.id} style={styles.studentCard}>
+                    <View style={styles.studentInfo}>
+                      <View style={styles.studentHeader}>
+                        <Text style={styles.studentName}>{student.name}</Text>
+                        <Text style={styles.rollNumber}>#{student.rollNo}</Text>
+                      </View>
+                      <View style={styles.backendStatus}>
+                        <View style={styles.backendDot} />
+                        <Text style={styles.backendText}>From Backend</Text>
                       </View>
                     </View>
-                  ))}
-                </View>
+                  </View>
+                ))}
               </View>
-            ))
+            </View>
           )}
 
           {/* Help Text */}
@@ -171,10 +151,10 @@ export default function ViewStudentsScreen() {
             <View style={styles.helpCard}>
               <Text style={styles.helpTitle}>💡 Quick Tips</Text>
               <Text style={styles.helpText}>
-                • Pull down to refresh the student list{'\n'}
-                • Students are grouped by their classroom{'\n'}
-                • Video status shows AI readiness for attendance{'\n'}
-                • Tap + to register more students
+                • Pull down to refresh from backend{'\n'}
+                • Students are loaded from the AI system{'\n'}
+                • All enrolled students appear here{'\n'}
+                • Tap + to register new students
               </Text>
             </View>
           )}
@@ -278,7 +258,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 16,
   },
-  classroomCard: {
+  studentsCard: {
     backgroundColor: 'white',
     borderRadius: 16,
     shadowColor: '#000',
@@ -289,7 +269,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     overflow: 'hidden',
   },
-  classroomHeader: {
+  studentsHeader: {
     backgroundColor: '#f3f4f6',
     paddingHorizontal: 20,
     paddingVertical: 16,
@@ -297,12 +277,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  classroomTitle: {
+  studentsTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1f2937',
   },
-  classroomCount: {
+  studentsCount: {
     color: '#6b7280',
     fontSize: 14,
   },
@@ -344,20 +324,20 @@ const styles = StyleSheet.create({
     color: '#6b7280',
     marginBottom: 4,
   },
-  videoStatus: {
+  backendStatus: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  videoDot: {
+  backendDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#16a34a',
+    backgroundColor: '#2563eb',
     marginRight: 6,
   },
-  videoText: {
+  backendText: {
     fontSize: 12,
-    color: '#16a34a',
+    color: '#2563eb',
     fontWeight: '500',
   },
   helpCard: {

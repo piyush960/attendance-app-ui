@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image, Alert, StyleSheet } from 'react-native';
 import { UserPlus, Camera, BookOpen, Users, LogOut } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -6,7 +6,6 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../App';
 import { User } from '../services/auth';
-import { ApiService } from '../services/api';
 
 type HomeScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -17,25 +16,6 @@ interface HomeScreenProps {
 
 export default function HomeScreen({ user, onLogout }: HomeScreenProps) {
   const navigation = useNavigation<HomeScreenNavigationProp>();
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    totalClasses: 0,
-    averageAttendance: 0,
-    recentAttendanceCount: 0,
-  });
-
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      const classroomStats = await ApiService.getClassroomStats();
-      setStats(classroomStats);
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    }
-  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -140,24 +120,6 @@ export default function HomeScreen({ user, onLogout }: HomeScreenProps) {
             </TouchableOpacity>
           </View>
 
-          {/* Stats Section */}
-          <View style={styles.statsSection}>
-            <Text style={styles.statsTitle}>Class Overview</Text>
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumberBlue}>{stats.totalStudents}</Text>
-                <Text style={styles.statLabel}>Students</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumberGreen}>{stats.averageAttendance}%</Text>
-                <Text style={styles.statLabel}>Attendance</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumberAmber}>{stats.totalClasses}</Text>
-                <Text style={styles.statLabel}>Classes</Text>
-              </View>
-            </View>
-          </View>
 
           {/* System Notice */}
           <View style={styles.offlineNotice}>
@@ -279,48 +241,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     textAlign: 'center',
-  },
-  statsSection: {
-    backgroundColor: 'white',
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
-    padding: 24,
-    marginBottom: 24,
-  },
-  statsTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1f2937',
-    marginBottom: 16,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumberBlue: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#2563eb',
-  },
-  statNumberGreen: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#16a34a',
-  },
-  statNumberAmber: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#d97706',
-  },
-  statLabel: {
-    color: '#6b7280',
   },
   offlineNotice: {
     backgroundColor: '#eff6ff',

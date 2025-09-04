@@ -14,7 +14,8 @@ export default function RegisterStudentScreen() {
   const navigation = useNavigation<RegisterStudentNavigationProp>();
   const [studentName, setStudentName] = useState('');
   const [rollNo, setRollNo] = useState('');
-  const [classRoom, setClassRoom] = useState('');
+  const [standard, setStandard] = useState('');
+  const [division, setDivision] = useState('');
   const [videoUploaded, setVideoUploaded] = useState(false);
   const [videoUri, setVideoUri] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
@@ -81,23 +82,13 @@ export default function RegisterStudentScreen() {
   };
 
   const handleRegister = async () => {
-    if (!studentName || !rollNo || !classRoom) {
+    if (!studentName || !rollNo || !standard || !division) {
       Alert.alert('Missing Information', 'Please fill in all required fields');
       return;
     }
 
     if (!videoUploaded) {
       Alert.alert('Video Required', 'Please upload a video of the student for face recognition');
-      return;
-    }
-
-    // Validate classroom format
-    const classroomPattern = /^[0-9]+[A-Z]$/;
-    if (!classroomPattern.test(classRoom)) {
-      Alert.alert(
-        'Invalid Classroom Format', 
-        'Please enter classroom in format like "5A", "10B", etc.'
-      );
       return;
     }
 
@@ -115,7 +106,8 @@ export default function RegisterStudentScreen() {
       const result = await ApiService.registerStudent({
         name: studentName,
         rollNo: rollNo,
-        classroom: classRoom,
+        standard: standard,
+        division: division,
         videoUri: videoUri,
         // You can customize these parameters if needed
         minRequiredImages: 5,
@@ -154,7 +146,8 @@ export default function RegisterStudentScreen() {
               onPress: () => {
                 setStudentName('');
                 setRollNo('');
-                setClassRoom('');
+                setStandard('');
+                setDivision('');
                 setVideoUploaded(false);
                 setVideoUri(undefined);
               }
@@ -165,7 +158,8 @@ export default function RegisterStudentScreen() {
               onPress: () => {
                 setStudentName('');
                 setRollNo('');
-                setClassRoom('');
+                setStandard('');
+                setDivision('');
                 setVideoUploaded(false);
                 setVideoUri(undefined);
                 navigation.goBack();
@@ -250,15 +244,28 @@ export default function RegisterStudentScreen() {
               />
             </View>
 
-            {/* Class Room */}
+            {/* Standard */}
             <View style={styles.fieldContainer}>
               <Text style={styles.fieldLabel}>
-                <Home size={16} color="#6b7280" /> Class Room *
+                <Home size={16} color="#6b7280" /> Standard *
               </Text>
               <TextInput
-                value={classRoom}
-                onChangeText={setClassRoom}
-                placeholder="Enter class/section"
+                value={standard}
+                onChangeText={setStandard}
+                placeholder="Enter standard (e.g., 10, 11, 12)"
+                style={styles.textInput}
+              />
+            </View>
+
+            {/* Division */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>
+                <Home size={16} color="#6b7280" /> Division *
+              </Text>
+              <TextInput
+                value={division}
+                onChangeText={setDivision}
+                placeholder="Enter division (e.g., A, B, C)"
                 style={styles.textInput}
               />
             </View>
@@ -337,7 +344,7 @@ export default function RegisterStudentScreen() {
               <Text style={styles.instructionItem}>• Maximum file size: 100MB</Text>
               <Text style={styles.instructionItem}>• Duration: 1 second to 5 minutes recommended</Text>
               <Text style={styles.instructionItem}>• Ensure clear, well-lit video with student's face visible</Text>
-              <Text style={styles.instructionItem}>• Classroom format: 5A, 10B, etc.</Text>
+              <Text style={styles.instructionItem}>• Enter standard and division as separate fields</Text>
             </View>
           </View>
 

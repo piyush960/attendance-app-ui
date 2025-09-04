@@ -61,17 +61,8 @@ export default function AttendanceHistoryScreen() {
     };
   };
 
-  const getAttendanceColor = (percentage: number) => {
-    if (percentage >= 80) return '#16a34a'; // Green
-    if (percentage >= 60) return '#f59e0b'; // Yellow
-    return '#dc2626'; // Red
-  };
-
   const totalSessions = attendanceRecords.length;
   const totalStudentsProcessed = attendanceRecords.reduce((sum, record) => sum + record.total, 0);
-  const averageAttendance = attendanceRecords.length > 0 
-    ? attendanceRecords.reduce((sum, record) => sum + (record.total > 0 ? (record.present / record.total) * 100 : 0), 0) / attendanceRecords.length
-    : 0;
 
   return (
     <View style={styles.container}>
@@ -104,8 +95,8 @@ export default function AttendanceHistoryScreen() {
                 <Text style={styles.summaryLabel}>Sessions</Text>
               </View>
               <View style={styles.summaryItem}>
-                <Text style={styles.summaryNumber}>{Math.round(averageAttendance)}%</Text>
-                <Text style={styles.summaryLabel}>Avg Attendance</Text>
+                <Text style={styles.summaryNumber}>{totalStudentsProcessed}</Text>
+                <Text style={styles.summaryLabel}>Students Processed</Text>
               </View>
             </View>
           </View>
@@ -129,17 +120,15 @@ export default function AttendanceHistoryScreen() {
           ) : (
             attendanceRecords.map((record) => {
               const { date, time } = formatDateTime(record.date);
-              const attendancePercentage = record.total > 0 ? (record.present / record.total) * 100 : 0;
-              const attendanceColor = getAttendanceColor(attendancePercentage);
               
               return (
                 <View key={record.id} style={styles.recordCard}>
                   <View style={styles.recordHeader}>
                     <View style={styles.recordTitleRow}>
                       <Text style={styles.recordClass}>Class {record.classroom}</Text>
-                      <View style={[styles.attendanceChip, { backgroundColor: `${attendanceColor}15` }]}>
-                        <Text style={[styles.attendancePercent, { color: attendanceColor }]}>
-                          {Math.round(attendancePercentage)}%
+                      <View style={styles.totalChip}>
+                        <Text style={styles.totalText}>
+                          {record.total} Students
                         </Text>
                       </View>
                     </View>
@@ -147,27 +136,6 @@ export default function AttendanceHistoryScreen() {
                       <Calendar size={14} color="#6b7280" />
                       <Text style={styles.recordDate}>{date}</Text>
                       <Text style={styles.recordTime}>{time}</Text>
-                    </View>
-                  </View>
-
-                  <View style={styles.recordStats}>
-                    <View style={styles.statColumn}>
-                      <View style={styles.statItem}>
-                        <Text style={styles.statNumberGreen}>{record.present}</Text>
-                        <Text style={styles.statLabelSmall}>Present</Text>
-                      </View>
-                    </View>
-                    <View style={styles.statColumn}>
-                      <View style={styles.statItem}>
-                        <Text style={styles.statNumberRed}>{record.absent}</Text>
-                        <Text style={styles.statLabelSmall}>Absent</Text>
-                      </View>
-                    </View>
-                    <View style={styles.statColumn}>
-                      <View style={styles.statItem}>
-                        <Text style={styles.statNumberGray}>{record.total}</Text>
-                        <Text style={styles.statLabelSmall}>Total</Text>
-                      </View>
                     </View>
                   </View>
 
@@ -220,8 +188,8 @@ export default function AttendanceHistoryScreen() {
             <View style={styles.helpCard}>
               <Text style={styles.helpTitle}>📊 Understanding Your Data</Text>
               <Text style={styles.helpText}>
-                • Records show attendance processed via AI analysis{'\n'}
-                • Percentage colors: Green (≥80%), Yellow (≥60%), Red (&lt;60%){'\n'}
+                • Records show attendance sessions processed via AI{'\n'}
+                • Each record displays total students in the class{'\n'}
                 • Pull down to refresh latest records{'\n'}
                 • Tap camera + to process new attendance
               </Text>
@@ -352,14 +320,16 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#1f2937',
   },
-  attendanceChip: {
+  totalChip: {
+    backgroundColor: '#eff6ff',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  attendancePercent: {
+  totalText: {
     fontSize: 14,
     fontWeight: 'bold',
+    color: '#2563eb',
   },
   recordDateTime: {
     flexDirection: 'row',
@@ -374,41 +344,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     fontWeight: '500',
-  },
-  recordStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#f3f4f6',
-    marginBottom: 16,
-  },
-  statColumn: {
-    alignItems: 'center',
-  },
-  statItem: {
-    alignItems: 'center',
-  },
-  statNumberGreen: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#16a34a',
-  },
-  statNumberRed: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#dc2626',
-  },
-  statNumberGray: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#6b7280',
-  },
-  statLabelSmall: {
-    fontSize: 12,
-    color: '#9ca3af',
-    marginTop: 4,
   },
   photoInfo: {
     flexDirection: 'row',

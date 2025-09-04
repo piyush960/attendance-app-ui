@@ -12,7 +12,8 @@ type TakeAttendanceNavigationProp = NativeStackNavigationProp<RootStackParamList
 
 export default function TakeAttendanceScreen() {
   const navigation = useNavigation<TakeAttendanceNavigationProp>();
-  const [classRoom, setClassRoom] = useState('');
+  const [standard, setStandard] = useState('');
+  const [division, setDivision] = useState('');
   const [photosUploaded, setPhotosUploaded] = useState(false);
   const [photoUris, setPhotoUris] = useState<string[]>([]);
   const [attendanceResults, setAttendanceResults] = useState<AttendanceResult[]>([]);
@@ -92,8 +93,8 @@ export default function TakeAttendanceScreen() {
   };
 
   const handleTakeAttendance = async () => {
-    if (!classRoom) {
-      Alert.alert('Missing Information', 'Please enter the class room');
+    if (!standard || !division) {
+      Alert.alert('Missing Information', 'Please enter both standard and division');
       return;
     }
 
@@ -106,7 +107,8 @@ export default function TakeAttendanceScreen() {
 
     try {
       const result = await ApiService.processAttendance({
-        classroom: classRoom,
+        standard: standard,
+        division: division,
         photoUris: photoUris,
       });
 
@@ -138,10 +140,10 @@ export default function TakeAttendanceScreen() {
     }
 
     try {
-      const result = await ApiService.downloadExcelFile(excelBlob, classRoom);
+      const result = await ApiService.downloadExcelFile(excelBlob, `${standard}${division}`);
       
       if (result.success) {
-        Alert.alert('Download Successful', result.message || 'Attendance report downloaded successfully!');
+        Alert.alert('Attendance report shared successfully!');
       } else {
         Alert.alert('Download Failed', result.message || 'Failed to download attendance report');
       }
@@ -204,15 +206,28 @@ export default function TakeAttendanceScreen() {
               <View style={styles.formCard}>
                 <Text style={styles.cardTitle}>Class Information</Text>
 
-                {/* Class Room Input */}
+                {/* Standard Input */}
                 <View style={styles.fieldContainer}>
                   <Text style={styles.fieldLabel}>
-                    <Home size={16} color="#6b7280" /> Class Room *
+                    <Home size={16} color="#6b7280" /> Standard *
                   </Text>
                   <TextInput
-                    value={classRoom}
-                    onChangeText={setClassRoom}
-                    placeholder="Enter class/section (e.g., 5A, 10B)"
+                    value={standard}
+                    onChangeText={setStandard}
+                    placeholder="Enter standard (e.g., 10, 11, 12)"
+                    style={styles.textInput}
+                  />
+                </View>
+
+                {/* Division Input */}
+                <View style={styles.fieldContainer}>
+                  <Text style={styles.fieldLabel}>
+                    <Home size={16} color="#6b7280" /> Division *
+                  </Text>
+                  <TextInput
+                    value={division}
+                    onChangeText={setDivision}
+                    placeholder="Enter division (e.g., A, B, C)"
                     style={styles.textInput}
                   />
                 </View>
@@ -334,8 +349,10 @@ export default function TakeAttendanceScreen() {
             /* Results Section */
             <View style={styles.resultsCard}>
               <View style={styles.resultsHeader}>
-                <Text style={styles.resultsTitle}>Attendance Processed Successfully!</Text>
-                <Text style={styles.resultsClass}>Class: {classRoom}</Text>
+                <View style={styles.resultsTitleContainer}>
+                  <Text style={styles.resultsTitle}>Attendance Processed Successfully!</Text>
+                  <Text style={styles.resultsClass}>Class: {standard}{division}</Text>
+                </View>
               </View>
 
               {/* Success Message */}
@@ -367,7 +384,7 @@ export default function TakeAttendanceScreen() {
                 onPress={handleDownloadExcel}
               >
                 <FileText color="white" size={24} />
-                <Text style={styles.downloadButtonText}>Download Excel Report</Text>
+                <Text style={styles.downloadButtonText}>Share Excel Report</Text>
               </TouchableOpacity>
               
               {/* Back Button */}
@@ -379,7 +396,8 @@ export default function TakeAttendanceScreen() {
                   setPhotoUris([]);
                   setPhotosUploaded(false);
                   setExcelBlob(null);
-                  setClassRoom('');
+                  setStandard('');
+                  setDivision('');
                   console.log('State reset for new class processing');
                 }}
               >
@@ -619,18 +637,22 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 24,
+  },
+  resultsTitleContainer: {
+    alignItems: 'flex-start',
   },
   resultsTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#1f2937',
+    marginBottom: 4,
+    flexWrap: 'wrap',
   },
   resultsClass: {
+    fontSize: 14,
     color: '#6b7280',
+    fontWeight: '500',
   },
   summaryStats: {
     flexDirection: 'row',
